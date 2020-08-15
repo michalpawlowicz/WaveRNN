@@ -101,6 +101,7 @@ def voc_train_loop(paths: Paths, model: WaveRNN, loss_func, optimizer, train_set
 
         start = time.time()
         running_loss = 0.
+        avg_loss = 0
 
         for i, (x, y, m) in enumerate(train_set, 1):
             x, m, y = x.to(device), m.to(device), y.to(device)
@@ -150,7 +151,7 @@ def voc_train_loop(paths: Paths, model: WaveRNN, loss_func, optimizer, train_set
 
         # Must save latest optimizer state to ensure that resuming training
         # doesn't produce artifacts
-        save_checkpoint('voc', paths, model, optimizer, is_silent=True)
+        save_checkpoint('voc', paths, model, optimizer, name="model-epoch-{0}-loss-{1}".format(e, avg_loss), is_silent=True)
         model.log(paths.voc_log, msg)
         print(' ')
 
