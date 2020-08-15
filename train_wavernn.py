@@ -15,6 +15,12 @@ from utils import data_parallel_workaround
 from utils.checkpoints import save_checkpoint, restore_checkpoint
 
 
+checkpoint_path = "checkpoints/ljspeech_mol.wavernn/"
+#checkpoint_name = "model-epoch-429-loss-5.5122099649212695"
+checkpoint_name = "model-epoch-391-loss-4.991000374928736"
+EPOCH=429+1
+
+
 def main():
 
     # Parse Arguments
@@ -64,11 +70,16 @@ def main():
                         sample_rate=hp.sample_rate,
                         mode=hp.voc_mode).to(device)
 
+    #voc_model.load_state_dict(torch.load("checkpoints/ljspeech_mol.wavernn/model-epoch-429-loss-5.5122099649212695_weights.pyt"))
+    #voc_model.eval()
+
     # Check to make sure the hop length is correctly factorised
     assert np.cumprod(hp.voc_upsample_factors)[-1] == hp.hop_length
 
     optimizer = optim.Adam(voc_model.parameters())
     restore_checkpoint('voc', paths, voc_model, optimizer, create_if_missing=True)
+
+    restore_checkpoint('voc', paths, voc_model, optimizer, name=checkpoint_name, create_if_missing=False) 
 
     train_set, test_set = get_vocoder_datasets(paths.data, batch_size, train_gta)
 
@@ -97,7 +108,7 @@ def voc_train_loop(paths: Paths, model: WaveRNN, loss_func, optimizer, train_set
     total_iters = len(train_set)
     epochs = (total_steps - model.get_step()) // total_iters + 1
 
-    for e in range(1, epochs + 1):
+    for e in range(EPOCH, epochs + 1):
 
         start = time.time()
         running_loss = 0.
@@ -127,8 +138,8 @@ def voc_train_loop(paths: Paths, model: WaveRNN, loss_func, optimizer, train_set
             loss.backward()
             if hp.voc_clip_grad_norm is not None:
                 grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), hp.voc_clip_grad_norm)
-                if np.isnan(grad_norm):
-                    print('grad_norm was NaN!')
+                #if np.isnan(grad_norm):
+                #    print('grad_norm was NaN!')
             optimizer.step()
 
             running_loss += loss.item()

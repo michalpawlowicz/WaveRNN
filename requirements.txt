@@ -1,6 +1,9 @@
-numpy==1.16.2
-librosa==0.6.3
+numpy
+torch
+librosa==0.7.2
+numba==0.48
 matplotlib
 unidecode
 inflect
 nltk
+sndfile
