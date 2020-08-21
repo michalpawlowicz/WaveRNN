@@ -13,6 +13,11 @@ class Paths:
         self.mel = self.data/'mel'
         self.gta = self.data/'gta'
 
+        # Test Data Paths
+        self.test_quant = self.data/'test_quant'
+        self.test_mel = self.data/'test_mel'
+        self.test_gta = self.data/'test_gta'
+
         # WaveRNN/Vocoder Paths
         self.voc_checkpoints = self.base/'checkpoints'/f'{voc_id}.wavernn'
         self.voc_latest_weights = self.voc_checkpoints/'latest_weights.pyt'
