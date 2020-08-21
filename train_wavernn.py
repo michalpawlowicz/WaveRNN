@@ -13,6 +13,7 @@ from utils.paths import Paths
 import argparse
 from utils import data_parallel_workaround
 from utils.checkpoints import save_checkpoint, restore_checkpoint
+from torch.utils.tensorboard import SummaryWriter
 
 
 def main():
@@ -88,6 +89,8 @@ def main():
 
     loss_func = F.cross_entropy if voc_model.mode == 'RAW' else discretized_mix_logistic_loss
 
+    writer = SummaryWriter()
+
     voc_train_loop(paths, voc_model, loss_func, optimizer, train_set, test_set, lr, total_steps)
 
     print('Training Complete.')
@@ -102,6 +105,8 @@ def voc_train_loop(paths: Paths, model: WaveRNN, loss_func, optimizer, train_set
 
     total_iters = len(train_set)
     epochs = (total_steps - model.get_step()) // total_iters + 1
+
+    total_number_of_batches = len(train_set)
 
     for e in range(EPOCH, epochs + 1):
 
@@ -145,6 +150,9 @@ def voc_train_loop(paths: Paths, model: WaveRNN, loss_func, optimizer, train_set
             step = model.get_step()
             k = step // 1000
 
+            # Write to tensorboard per batch
+            writter.add_scalar('Epoch loss', loss.item(), e*total_number_of_batches+i)
+
             if step % hp.voc_checkpoint_every == 0:
                 gen_testset(model, test_set, hp.voc_gen_at_checkpoint, hp.voc_gen_batched,
                             hp.voc_target, hp.voc_overlap, paths.voc_output)
@@ -155,6 +163,9 @@ def voc_train_loop(paths: Paths, model: WaveRNN, loss_func, optimizer, train_set
             msg = f'| Epoch: {e}/{epochs} ({i}/{total_iters}) | Loss: {avg_loss:.4f} | {speed:.1f} steps/s | Step: {k}k | '
             stream(msg)
 
+        # Write to tensorboard per epoch
+        writter.add_scalar('Running loss', running_loss, e)
+        writter.add_scalar('Average loss', running_loss, e)
         # Must save latest optimizer state to ensure that resuming training
         # doesn't produce artifacts
         save_checkpoint('voc', paths, model, optimizer, name="model-epoch-{0}-loss-{1}".format(e, avg_loss), is_silent=True)
