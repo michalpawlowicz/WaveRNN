@@ -25,6 +25,8 @@ def main():
 
     # Parse Arguments
     parser = argparse.ArgumentParser(description='Train WaveRNN Vocoder')
+    parser.add_argument('--epoch', '-e', type=int, action='store_const', dest='epoch', default=0, help='Staring epoch value')
+    parser.add_argument('--checkpoint_name', '-c', dest='checkpoint_name', default=None, help='Staring checkpoint name')
     parser.add_argument('--lr', '-l', type=float,  help='[float] override hparams.py learning rate')
     parser.add_argument('--batch_size', '-b', type=int, help='[int] override hparams.py batch size')
     parser.add_argument('--force_train', '-f', action='store_true', help='Forces the model to train past total steps')
@@ -45,6 +47,8 @@ def main():
     force_train = args.force_train
     train_gta = args.gta
     lr = args.lr
+    EPOCH=args.epoch
+    checkpoint_name=args.checkpoint_name
 
     if not args.force_cpu and torch.cuda.is_available():
         device = torch.device('cuda')
@@ -70,16 +74,13 @@ def main():
                         sample_rate=hp.sample_rate,
                         mode=hp.voc_mode).to(device)
 
-    #voc_model.load_state_dict(torch.load("checkpoints/ljspeech_mol.wavernn/model-epoch-429-loss-5.5122099649212695_weights.pyt"))
-    #voc_model.eval()
-
     # Check to make sure the hop length is correctly factorised
     assert np.cumprod(hp.voc_upsample_factors)[-1] == hp.hop_length
 
     optimizer = optim.Adam(voc_model.parameters())
-    restore_checkpoint('voc', paths, voc_model, optimizer, create_if_missing=True)
 
-    restore_checkpoint('voc', paths, voc_model, optimizer, name=checkpoint_name, create_if_missing=False) 
+    if checkpoint_name is not None:
+        restore_checkpoint('voc', paths, voc_model, optimizer, name=checkpoint_name, create_if_missing=False) 
 
     train_set, test_set = get_vocoder_datasets(paths.data, batch_size, train_gta)
 
