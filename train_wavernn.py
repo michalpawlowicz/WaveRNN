@@ -152,6 +152,7 @@ def voc_train_loop(paths: Paths, model: WaveRNN, loss_func, optimizer, train_set
 
             # Write to tensorboard per batch
             writter.add_scalar('Epoch loss', loss.item(), e*total_number_of_batches+i)
+            # write train accuracy per epoch
 
             if step % hp.voc_checkpoint_every == 0:
                 gen_testset(model, test_set, hp.voc_gen_at_checkpoint, hp.voc_gen_batched,
@@ -166,6 +167,9 @@ def voc_train_loop(paths: Paths, model: WaveRNN, loss_func, optimizer, train_set
         # Write to tensorboard per epoch
         writter.add_scalar('Running loss', running_loss, e)
         writter.add_scalar('Average loss', running_loss, e)
+        # write test accuracy per epoch ?
+        # write train accuracy (accumulated)
+
         # Must save latest optimizer state to ensure that resuming training
         # doesn't produce artifacts
         save_checkpoint('voc', paths, model, optimizer, name="model-epoch-{0}-loss-{1}".format(e, avg_loss), is_silent=True)
