@@ -15,6 +15,7 @@ from utils import data_parallel_workaround
 from utils.checkpoints import save_checkpoint, restore_checkpoint
 from torch.utils.tensorboard import SummaryWriter
 
+EPOCH=0
 
 def main():
 
@@ -89,8 +90,6 @@ def main():
 
     loss_func = F.cross_entropy if voc_model.mode == 'RAW' else discretized_mix_logistic_loss
 
-    writer = SummaryWriter()
-
     voc_train_loop(paths, voc_model, loss_func, optimizer, train_set, test_set, lr, total_steps)
 
     print('Training Complete.')
@@ -107,6 +106,8 @@ def voc_train_loop(paths: Paths, model: WaveRNN, loss_func, optimizer, train_set
     epochs = (total_steps - model.get_step()) // total_iters + 1
 
     total_number_of_batches = len(train_set)
+
+    writer = SummaryWriter()
 
     for e in range(EPOCH, epochs + 1):
 
@@ -151,22 +152,24 @@ def voc_train_loop(paths: Paths, model: WaveRNN, loss_func, optimizer, train_set
             k = step // 1000
 
             # Write to tensorboard per batch
-            writter.add_scalar('Epoch loss', loss.item(), e*total_number_of_batches+i)
+            writer.add_scalar('Epoch loss', loss.item(), e*total_number_of_batches+i)
             # write train accuracy per epoch
 
+            """
             if step % hp.voc_checkpoint_every == 0:
                 gen_testset(model, test_set, hp.voc_gen_at_checkpoint, hp.voc_gen_batched,
                             hp.voc_target, hp.voc_overlap, paths.voc_output)
                 ckpt_name = f'wave_step{k}K'
                 save_checkpoint('voc', paths, model, optimizer,
                                 name=ckpt_name, is_silent=True)
+            """
 
             msg = f'| Epoch: {e}/{epochs} ({i}/{total_iters}) | Loss: {avg_loss:.4f} | {speed:.1f} steps/s | Step: {k}k | '
             stream(msg)
 
         # Write to tensorboard per epoch
-        writter.add_scalar('Running loss', running_loss, e)
-        writter.add_scalar('Average loss', running_loss, e)
+        writer.add_scalar('Running loss', running_loss, e)
+        writer.add_scalar('Average loss', running_loss, e)
         # write test accuracy per epoch ?
         # write train accuracy (accumulated)
 
