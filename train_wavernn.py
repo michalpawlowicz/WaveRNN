@@ -15,18 +15,12 @@ from utils import data_parallel_workaround
 from utils.checkpoints import save_checkpoint, restore_checkpoint
 
 
-checkpoint_path = "checkpoints/ljspeech_mol.wavernn/"
-#checkpoint_name = "model-epoch-429-loss-5.5122099649212695"
-checkpoint_name = "model-epoch-391-loss-4.991000374928736"
-EPOCH=429+1
-
-
 def main():
 
     # Parse Arguments
     parser = argparse.ArgumentParser(description='Train WaveRNN Vocoder')
-    parser.add_argument('--epoch', '-e', type=int, action='store_const', dest='epoch', default=0, help='Staring epoch value')
-    parser.add_argument('--checkpoint_name', '-c', dest='checkpoint_name', default=None, help='Staring checkpoint name')
+    parser.add_argument('--epoch', '-e', action='store', dest='epoch', default=0, help='Staring epoch value')
+    parser.add_argument('--checkpoint_name', '-n', dest='checkpoint_name', default=None, help='Staring checkpoint name')
     parser.add_argument('--lr', '-l', type=float,  help='[float] override hparams.py learning rate')
     parser.add_argument('--batch_size', '-b', type=int, help='[int] override hparams.py batch size')
     parser.add_argument('--force_train', '-f', action='store_true', help='Forces the model to train past total steps')
