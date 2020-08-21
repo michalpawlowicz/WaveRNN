@@ -20,13 +20,23 @@ class VocoderDataset(Dataset):
         self.metadata = dataset_ids
         self.mel_path = path/'gta' if train_gta else path/'mel'
         self.quant_path = path/'quant'
+        self.mel_dict = dict()
+        self.quant_dict = dict()
+        for index in range(0, len(self.metadata)):
+            item_id = self.metadata[index]
+            m = np.load(self.mel_path/f'{item_id}.npy')
+            x = np.load(self.quant_path/f'{item_id}.npy')
+            self.mel_dict[self.mel_path/f'{item_id}.npy'] = m
+            self.quant_dict[self.quant_path/f'{item_id}.npy'] = x
+
 
 
     def __getitem__(self, index):
         item_id = self.metadata[index]
-        m = np.load(self.mel_path/f'{item_id}.npy')
-        x = np.load(self.quant_path/f'{item_id}.npy')
-        return m, x
+        #m = np.load(self.mel_path/f'{item_id}.npy')
+        #x = np.load(self.quant_path/f'{item_id}.npy')
+        #return m, x
+        return self.mel_dict[self.mel_path/f'{item_id}.npy'], self.quant_dict[self.quant_path/f'{item_id}.npy']
 
     def __len__(self):
         return len(self.metadata)
