@@ -46,6 +46,7 @@ def save_checkpoint(checkpoint_type: str, paths: Paths, model, optimizer, *,
 
         if num_exist not in (0,2):
             # Checkpoint broken
+            print("-----> {}".format(path_dict))
             raise FileNotFoundError(
                 f'We expected either both or no files in the {s} checkpoint to '
                 'exist, but instead we got exactly one!')
@@ -65,8 +66,10 @@ def save_checkpoint(checkpoint_type: str, paths: Paths, model, optimizer, *,
     weights_path, optim_path, checkpoint_path = \
         get_checkpoint_paths(checkpoint_type, paths)
 
+    """
     latest_paths = {'w': weights_path, 'o': optim_path}
     helper(latest_paths, False)
+    """
 
     if name:
         named_paths = {
