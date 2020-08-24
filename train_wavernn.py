@@ -73,7 +73,8 @@ def main():
     # Check to make sure the hop length is correctly factorised
     assert np.cumprod(hp.voc_upsample_factors)[-1] == hp.hop_length
 
-    optimizer = optim.Adam(voc_model.parameters())
+    #optimizer = optim.Adam(voc_model.parameters())
+    optimizer = optim.SGD(voc_model.parameters(), lr=lr)
 
     if checkpoint_name is not None:
         restore_checkpoint('voc', paths, voc_model, optimizer, name=checkpoint_name, create_if_missing=False) 
