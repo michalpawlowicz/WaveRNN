@@ -41,6 +41,27 @@ class VocoderDataset(Dataset):
     def __len__(self):
         return len(self.metadata)
 
+def get_vocoder_test_dataset(path: Path, batch_size):
+    with open(path/'test_dataset.pkl', 'rb') as f:
+        dataset = pickle.load(f)
+
+    dataset_ids = [x[0] for x in dataset]
+
+    random.seed(1234)
+    random.shuffle(dataset_ids)
+
+    print("Size of voc_test_samples", hp.voc_test_samples)
+
+    test_dataset = VocoderDataset(path, dataset_ids, False)
+
+    test_set = DataLoader(test_dataset,
+                           collate_fn=collate_vocoder,
+                           batch_size=batch_size,
+                           num_workers=8,
+                           shuffle=True,
+                           pin_memory=True)
+
+    return test_set
 
 def get_vocoder_datasets(path: Path, batch_size, train_gta):
 
@@ -51,6 +72,8 @@ def get_vocoder_datasets(path: Path, batch_size, train_gta):
 
     random.seed(1234)
     random.shuffle(dataset_ids)
+
+    print("Size of voc_test_samples", hp.voc_test_samples)
 
     test_ids = dataset_ids[-hp.voc_test_samples:]
     train_ids = dataset_ids[:-hp.voc_test_samples]

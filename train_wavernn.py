@@ -4,7 +4,7 @@ import torch
 from torch import optim
 import torch.nn.functional as F
 from utils.display import stream, simple_table
-from utils.dataset import get_vocoder_datasets
+from utils.dataset import get_vocoder_datasets, get_vocoder_test_dataset
 from utils.distribution import discretized_mix_logistic_loss
 from utils import hparams as hp
 from models.fatchord_version import WaveRNN
@@ -79,6 +79,7 @@ def main():
         restore_checkpoint('voc', paths, voc_model, optimizer, name=checkpoint_name, create_if_missing=False) 
 
     train_set, test_set = get_vocoder_datasets(paths.data, batch_size, train_gta)
+    test_set = get_vocoder_test_dataset(paths.data, batch_size)
 
     total_steps = 10_000_000 if force_train else hp.voc_total_steps
 
@@ -153,7 +154,6 @@ def voc_train_loop(paths: Paths, model: WaveRNN, loss_func, optimizer, train_set
 
             # Write to tensorboard per batch
             writer.add_scalar('Epoch loss', loss.item(), e*total_number_of_batches+i)
-            # write train accuracy per epoch
 
             """
             if step % hp.voc_checkpoint_every == 0:
@@ -164,14 +164,35 @@ def voc_train_loop(paths: Paths, model: WaveRNN, loss_func, optimizer, train_set
                                 name=ckpt_name, is_silent=True)
             """
 
+
             msg = f'| Epoch: {e}/{epochs} ({i}/{total_iters}) | Loss: {avg_loss:.4f} | {speed:.1f} steps/s | Step: {k}k | '
             stream(msg)
 
+        ####################### Testing ############################
+        loss_test = 0
+        for _, (x_test, y_test, m_test) in enumerate(test_set, 1):
+            x_test, m_test, y_test = x_test.to(device), m_test.to(device), y_test.to(device)
+            if device.type == 'cuda' and torch.cuda.device_count() > 1:
+                raise RuntimeError("Unsupported")
+            else:
+                y_test_hat = model(x_test, m_test)
+
+            if model.mode == 'RAW':
+                y_test_hat = y_test_hat.transpose(1, 2).unsqueeze(-1)
+            elif model.mode == 'MOL':
+                y_test = y_test.float()
+
+            y_test = y_test.unsqueeze(-1)
+
+            loss_test += loss_func(y_test_hat, y_test).item()
+        avg_loss_test = loss_test / len(test_set)
+        ############################################################
+
         # Write to tensorboard per epoch
         writer.add_scalar('Running loss', running_loss, e)
-        writer.add_scalar('Average loss', running_loss, e)
-        # write test accuracy per epoch ?
-        # write train accuracy (accumulated)
+        writer.add_scalar('Average loss', avg_loss, e)
+        writer.add_scalar('Test loss', loss_test, e)
+        writer.add_scalar('Average test loss', avg_loss_test, e)
 
         # Must save latest optimizer state to ensure that resuming training
         # doesn't produce artifacts
