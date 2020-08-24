@@ -16,10 +16,14 @@ from pathlib import Path
 
 
 class VocoderDataset(Dataset):
-    def __init__(self, path: Path, dataset_ids, train_gta=False):
+    def __init__(self, path: Path, dataset_ids, train_gta=False, test_set=False):
         self.metadata = dataset_ids
-        self.mel_path = path/'gta' if train_gta else path/'mel'
-        self.quant_path = path/'quant'
+        if not test_set:
+            self.mel_path = path/'gta' if train_gta else path/'mel'
+            self.quant_path = path/'quant'
+        else:
+            self.mel_path = path/'test_gta' if train_gta else path/'test_mel'
+            self.quant_path = path/'test_quant'
         self.mel_dict = dict()
         self.quant_dict = dict()
         for index in range(0, len(self.metadata)):
@@ -52,7 +56,7 @@ def get_vocoder_test_dataset(path: Path, batch_size):
 
     print("Size of voc_test_samples", hp.voc_test_samples)
 
-    test_dataset = VocoderDataset(path, dataset_ids, False)
+    test_dataset = VocoderDataset(path, dataset_ids, False, test_set=True)
 
     test_set = DataLoader(test_dataset,
                            collate_fn=collate_vocoder,
