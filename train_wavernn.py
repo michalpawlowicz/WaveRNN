@@ -15,7 +15,7 @@ from utils import data_parallel_workaround
 from utils.checkpoints import save_checkpoint, restore_checkpoint
 from torch.utils.tensorboard import SummaryWriter
 
-EPOCH=0
+EPOCH=1000
 
 def main():
 
@@ -186,6 +186,9 @@ def voc_train_loop(paths: Paths, model: WaveRNN, loss_func, optimizer, train_set
 
             loss_test += loss_func(y_test_hat, y_test).item()
         avg_loss_test = loss_test / len(test_set)
+        msg = f'| Epoch: {e}/{epochs} | Test-Loss: {loss_test:.4f} | Test-AvgLoss: {avg_loss_test:.4f} | '
+        stream("\n")
+        stream(msg)
         ############################################################
 
         # Write to tensorboard per epoch
