@@ -30,6 +30,7 @@ def main():
     parser.add_argument('--force_cpu', '-c', action='store_true', help='Forces CPU-only training, even when in CUDA capable environment')
     parser.add_argument('--hp_file', metavar='FILE', default='hparams.py', help='The file to use for the hyperparameters')
     parser.add_argument('--model_name', metavar='model_name', default='model', help='Model prefix')
+    parser.add_argument('--adam', metavar='use_adam', default=False, help='user adam?')
     args = parser.parse_args()
 
     hp.configure(args.hp_file)  # load hparams from file
@@ -47,6 +48,7 @@ def main():
     EPOCH=args.epoch
     checkpoint_name=args.checkpoint_name
     model_name_prefix=args.model_name
+    use_adam = args.use_adam
 
     if not args.force_cpu and torch.cuda.is_available():
         device = torch.device('cuda')
@@ -76,7 +78,10 @@ def main():
     assert np.cumprod(hp.voc_upsample_factors)[-1] == hp.hop_length
 
     #optimizer = optim.Adam(voc_model.parameters())
-    optimizer = optim.SGD(voc_model.parameters(), lr=lr)
+    if use_adam:
+        optimizer = optim.Adam(voc_model.parameters(), lr=lr)
+    else:
+        optimizer = optim.SGD(voc_model.parameters(), lr=lr)
 
     if checkpoint_name is not None:
         restore_checkpoint('voc', paths, voc_model, optimizer, name=checkpoint_name, create_if_missing=False) 
