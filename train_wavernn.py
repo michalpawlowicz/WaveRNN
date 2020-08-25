@@ -29,6 +29,7 @@ def main():
     parser.add_argument('--gta', '-g', action='store_true', help='train wavernn on GTA features')
     parser.add_argument('--force_cpu', '-c', action='store_true', help='Forces CPU-only training, even when in CUDA capable environment')
     parser.add_argument('--hp_file', metavar='FILE', default='hparams.py', help='The file to use for the hyperparameters')
+    parser.add_argument('--model_name', metavar='model_name', default='model', help='Model prefix')
     args = parser.parse_args()
 
     hp.configure(args.hp_file)  # load hparams from file
@@ -45,6 +46,7 @@ def main():
     lr = args.lr
     EPOCH=args.epoch
     checkpoint_name=args.checkpoint_name
+    model_name_prefix=args.model_name
 
     if not args.force_cpu and torch.cuda.is_available():
         device = torch.device('cuda')
@@ -200,7 +202,7 @@ def voc_train_loop(paths: Paths, model: WaveRNN, loss_func, optimizer, train_set
 
         # Must save latest optimizer state to ensure that resuming training
         # doesn't produce artifacts
-        save_checkpoint('voc', paths, model, optimizer, name="model-epoch-{0}-loss-{1}".format(e, avg_loss), is_silent=True)
+        save_checkpoint('voc', paths, model, optimizer, name="{0}-epoch-{1}-loss-{2}".format(model_name_prefix, e, avg_loss), is_silent=True)
         model.log(paths.voc_log, msg)
         print(' ')
 
