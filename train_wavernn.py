@@ -16,8 +16,12 @@ from utils.checkpoints import save_checkpoint, restore_checkpoint
 from torch.utils.tensorboard import SummaryWriter
 
 EPOCH=1000
+model_name_prefix = 'model'
 
 def main():
+
+    global EPOCH
+    global model_name_prefix
 
     # Parse Arguments
     parser = argparse.ArgumentParser(description='Train WaveRNN Vocoder')
