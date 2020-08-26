@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 import numpy as np
 import torch
 from torch import optim
@@ -25,7 +26,7 @@ def main():
 
     # Parse Arguments
     parser = argparse.ArgumentParser(description='Train WaveRNN Vocoder')
-    parser.add_argument('--epoch', '-e', action='store', dest='epoch', default=0, help='Staring epoch value')
+    parser.add_argument('--epoch', '-e', dest='epoch', default=0, help='Staring epoch value')
     parser.add_argument('--checkpoint_name', '-n', dest='checkpoint_name', default=None, help='Staring checkpoint name')
     parser.add_argument('--lr', '-l', type=float,  help='[float] override hparams.py learning rate')
     parser.add_argument('--batch_size', '-b', type=int, help='[int] override hparams.py batch size')
@@ -49,7 +50,7 @@ def main():
     force_train = args.force_train
     train_gta = args.gta
     lr = args.lr
-    EPOCH=args.epoch
+    EPOCH=int(args.epoch)
     checkpoint_name=args.checkpoint_name
     model_name_prefix=args.model_name
     use_adam = args.adam
@@ -120,7 +121,7 @@ def voc_train_loop(paths: Paths, model: WaveRNN, loss_func, optimizer, train_set
 
     total_number_of_batches = len(train_set)
 
-    writer = SummaryWriter()
+    writer = SummaryWriter("runs/{0}-{1}".format(model_name_prefix, datetime.now().strftime("%Y%m%d-%H%M%S")))
 
     for e in range(EPOCH, epochs + 1):
 
@@ -180,7 +181,9 @@ def voc_train_loop(paths: Paths, model: WaveRNN, loss_func, optimizer, train_set
             msg = f'| Epoch: {e}/{epochs} ({i}/{total_iters}) | Loss: {avg_loss:.4f} | {speed:.1f} steps/s | Step: {k}k | '
             stream(msg)
 
+        """
         ####################### Testing ############################
+        torch.cuda.empty_cache()
         loss_test = 0
         for _, (x_test, y_test, m_test) in enumerate(test_set, 1):
             x_test, m_test, y_test = x_test.to(device), m_test.to(device), y_test.to(device)
@@ -201,13 +204,15 @@ def voc_train_loop(paths: Paths, model: WaveRNN, loss_func, optimizer, train_set
         msg = f'| Epoch: {e}/{epochs} | Test-Loss: {loss_test:.4f} | Test-AvgLoss: {avg_loss_test:.4f} | '
         stream("\n")
         stream(msg)
+
+        writer.add_scalar('Test loss', loss_test, e)
+        writer.add_scalar('Average test loss', avg_loss_test, e)
         ############################################################
+        """
 
         # Write to tensorboard per epoch
         writer.add_scalar('Running loss', running_loss, e)
         writer.add_scalar('Average loss', avg_loss, e)
-        writer.add_scalar('Test loss', loss_test, e)
-        writer.add_scalar('Average test loss', avg_loss_test, e)
 
         # Must save latest optimizer state to ensure that resuming training
         # doesn't produce artifacts
