@@ -8,3 +8,5 @@ inflect
 nltk
 sndfile
 scipy
+cython
+pesq
