@@ -30,8 +30,8 @@ parser.add_argument('--savepath', dest='savepath', required=False, default=None,
 args = parser.parse_args()
 
 if os.path.isdir(args.refpath) and os.path.isdir(args.degpath):
-    refs = sorted(os.scandir(args.refpath), key=lambda p: os.path.basename(p.path))[:3]
-    degs = sorted(os.scandir(args.degpath), key=lambda p: os.path.basename(p.path))[:3]
+    refs = sorted(os.scandir(args.refpath), key=lambda p: os.path.basename(p.path))
+    degs = sorted(os.scandir(args.degpath), key=lambda p: os.path.basename(p.path))
     if len(refs) != len(degs):
         print("Missing samples")
         sys.exit(1)
