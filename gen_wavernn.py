@@ -6,6 +6,8 @@ from utils.display import simple_table
 import torch
 import argparse
 from pathlib import Path
+import time
+import os
 
 
 def gen_testset(model: WaveRNN, test_set, samples, batched, target, overlap, save_path: Path):
@@ -43,8 +45,10 @@ def gen_from_file(model: WaveRNN, load_path: Path, save_path: Path, batched, tar
     suffix = load_path.suffix
     if suffix == ".wav":
         wav = load_wav(load_path)
-        save_wav(wav, save_path/f'__{file_name}__{k}k_steps_target.wav')
+        #save_wav(wav, save_path/f'__{file_name}__{k}k_steps_target.wav')
+        print("Generating from {0}".format(load_path))
         mel = melspectrogram(wav)
+        print("Melspectrograms generated!")
     elif suffix == ".npy":
         mel = np.load(load_path)
         if mel.ndim != 2 or mel.shape[0] != hp.num_mels:
@@ -60,9 +64,14 @@ def gen_from_file(model: WaveRNN, load_path: Path, save_path: Path, batched, tar
     mel = torch.tensor(mel).unsqueeze(0)
 
     batch_str = f'gen_batched_target{target}_overlap{overlap}' if batched else 'gen_NOT_BATCHED'
-    save_str = save_path/f'__{file_name}__{k}k_steps_{batch_str}.wav'
+    save_str = os.path.join(save_path, os.path.splittext(os.path.basename(load_path))[0], "_generated.wav")
 
-    _ = model.generate(mel, save_str, batched, target, overlap, hp.mu_law)
+    beg = time.time()
+    print("Start generating... [{0}]".format(beg))
+    output = model.generate(mel, save_str, batched, target, overlap, hp.mu_law)
+    end = time.time()
+    print("Done generating... [{0}] -> delta: [{1}]".format(end, end-beg))
+    save_wav(output, save_str)
 
 
 if __name__ == "__main__":

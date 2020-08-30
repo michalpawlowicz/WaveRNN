@@ -7,3 +7,6 @@ unidecode
 inflect
 nltk
 sndfile
+scipy
+cython
+pesq
