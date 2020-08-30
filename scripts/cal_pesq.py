@@ -3,6 +3,8 @@ import sys
 import librosa
 import os
 import argparse
+import scipy
+import numpy as np
 
 def cal_pesq(refpath, degpath, sr=16000):
     if isinstance(refpath, str) and isinstance(degpath, str):
@@ -26,8 +28,8 @@ parser.add_argument('--degpath', dest='degpath', required=True, help='Deg path o
 args = parser.parse_args()
 
 if os.path.isdir(args.refpath) and os.path.isdir(args.degpath):
-    refs = sorted(os.scandir(args.refpath), key=lambda p: os.path.basename(p.path))
-    degs = sorted(os.scandir(args.degpath), key=lambda p: os.path.basename(p.path))
+    refs = sorted(os.scandir(args.refpath), key=lambda p: os.path.basename(p.path))[:3]
+    degs = sorted(os.scandir(args.degpath), key=lambda p: os.path.basename(p.path))[:3]
     if len(refs) != len(degs):
         print("Missing samples")
         sys.exit(1)
@@ -35,11 +37,17 @@ if os.path.isdir(args.refpath) and os.path.isdir(args.degpath):
         if os.path.basename(x) != os.path.basename(y):
             print("Samples don't match")
             sys.exit(1)
-    for refpath, degpath in zip(refs, degs):
-        print(os.path.basename(refpath), cal_pesq(refpath.path, degpath.path))
+    acc = np.zeros((len(refs), 2)) 
+    for idx, (refpath, degpath) in enumerate(zip(refs, degs)):
+        wide, narrow = cal_pesq(refpath.path, degpath.path)
+        acc[idx,:] = [wide, narrow]
+        print(wide, narrow)
+    print("Wide stats: ", scipy.stats.describe(acc[:,0]))
+    print("Narrow stats: ", scipy.stats.describe(acc[:, 1]))
 else:
     _, ext1 = os.path.splitext(args.refpath)
     _, ext2 = os.path.splitext(args.degpath)
     if ext1 != ".wav" or ext2 != ".wav":
         raise RuntimeError("Give me .wav files")
-    print(cal_pesq(args.refpath, args.degpath))
+    wide, narrow = cal_pesq(args.refpath, args.degpath)
+    print(wide, narrow)

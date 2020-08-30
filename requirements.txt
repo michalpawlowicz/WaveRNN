@@ -7,3 +7,4 @@ unidecode
 inflect
 nltk
 sndfile
+scipy
