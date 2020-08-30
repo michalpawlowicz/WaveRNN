@@ -5,6 +5,7 @@ import os
 import argparse
 import scipy
 import numpy as np
+import csv
 
 def cal_pesq(refpath, degpath, sr=16000):
     if isinstance(refpath, str) and isinstance(degpath, str):
@@ -24,6 +25,7 @@ def cal_pesq(refpath, degpath, sr=16000):
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--refpath', dest='refpath', required=True, help='Ref path or dir')
 parser.add_argument('--degpath', dest='degpath', required=True, help='Deg path or dir')
+parser.add_argument('--savepath', dest='savepath', required=False, default=None, help='Save output to csv')
 
 args = parser.parse_args()
 
@@ -44,6 +46,14 @@ if os.path.isdir(args.refpath) and os.path.isdir(args.degpath):
         print(wide, narrow)
     print("Wide stats: ", scipy.stats.describe(acc[:,0]))
     print("Narrow stats: ", scipy.stats.describe(acc[:, 1]))
+
+    if args.savepath is not None:
+        with open(args.savepath, 'w+', newline='') as csv_file:
+            writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            writer.writerow(["sample", "wide", "narrow"])
+            for sample, row in zip(refs, acc):
+                writer.writerow([os.path.basename(sample), row[0], row[1]])
+            writer.writerow(["avg", scipy.stats.describe(acc[:,0])[2], scipy.stats.describe(acc[:,1])[2]])
 else:
     _, ext1 = os.path.splitext(args.refpath)
     _, ext2 = os.path.splitext(args.degpath)
