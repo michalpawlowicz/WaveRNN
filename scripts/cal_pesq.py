@@ -6,7 +6,7 @@ import argparse
 import scipy
 import numpy as np
 import csv
-#import semetrics
+import semetrics
 
 def cal_pesq(refpath, degpath, sr=16000):
     if isinstance(refpath, str) and isinstance(degpath, str):
@@ -31,8 +31,8 @@ parser.add_argument('--savepath', dest='savepath', required=False, default=None,
 args = parser.parse_args()
 
 if os.path.isdir(args.refpath) and os.path.isdir(args.degpath):
-    refs = sorted(os.scandir(args.refpath), key=lambda p: os.path.basename(p.path))
-    degs = sorted(os.scandir(args.degpath), key=lambda p: os.path.basename(p.path))
+    refs = list(filter(lambda p: os.path.isfile(p) and p.path.endswith(".wav"), sorted(os.scandir(args.refpath), key=lambda p: os.path.basename(p.path))))
+    degs = list(filter(lambda p: os.path.isfile(p) and p.path.endswith(".wav"), sorted(os.scandir(args.degpath), key=lambda p: os.path.basename(p.path))))
     if len(refs) != len(degs):
         print("Missing samples")
         sys.exit(1)
