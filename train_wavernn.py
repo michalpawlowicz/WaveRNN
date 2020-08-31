@@ -81,11 +81,7 @@ def main():
     # Check to make sure the hop length is correctly factorised
     assert np.cumprod(hp.voc_upsample_factors)[-1] == hp.hop_length
 
-    #optimizer = optim.Adam(voc_model.parameters())
-    if use_adam:
-        optimizer = optim.Adam(voc_model.parameters(), lr=lr)
-    else:
-        optimizer = optim.SGD(voc_model.parameters(), lr=lr)
+    optimizer = optim.Adam(voc_model.parameters(), lr=lr) if use_adam else optim.SGD(voc_model.parameters(), lr=lr)
 
     if checkpoint_name is not None:
         restore_checkpoint('voc', paths, voc_model, optimizer, name=checkpoint_name, create_if_missing=False) 
@@ -113,6 +109,7 @@ def voc_train_loop(paths: Paths, model: WaveRNN, loss_func, optimizer, train_set
     # Use same device as model parameters
     device = next(model.parameters()).device
 
+    # set learning rate
     for g in optimizer.param_groups: g['lr'] = lr
 
     total_iters = len(train_set)
@@ -152,8 +149,6 @@ def voc_train_loop(paths: Paths, model: WaveRNN, loss_func, optimizer, train_set
             loss.backward()
             if hp.voc_clip_grad_norm is not None:
                 grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), hp.voc_clip_grad_norm)
-                #if np.isnan(grad_norm):
-                #    print('grad_norm was NaN!')
             optimizer.step()
 
             running_loss += loss.item()
@@ -166,16 +161,6 @@ def voc_train_loop(paths: Paths, model: WaveRNN, loss_func, optimizer, train_set
 
             # Write to tensorboard per batch
             writer.add_scalar('Epoch loss', loss.item(), e*total_number_of_batches+i)
-
-            """
-            if step % hp.voc_checkpoint_every == 0:
-                gen_testset(model, test_set, hp.voc_gen_at_checkpoint, hp.voc_gen_batched,
-                            hp.voc_target, hp.voc_overlap, paths.voc_output)
-                ckpt_name = f'wave_step{k}K'
-                save_checkpoint('voc', paths, model, optimizer,
-                                name=ckpt_name, is_silent=True)
-            """
-
 
             msg = f'| Epoch: {e}/{epochs} ({i}/{total_iters}) | Loss: {avg_loss:.4f} | {speed:.1f} steps/s | Step: {k}k | '
             stream(msg)
