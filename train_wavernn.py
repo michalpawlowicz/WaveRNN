@@ -14,6 +14,7 @@ import argparse
 from utils import data_parallel_workaround
 from utils.checkpoints import save_checkpoint, restore_checkpoint
 from torch.utils.tensorboard import SummaryWriter
+from torch.optim.lr_scheduler import StepLR
 
 EPOCH=1000
 model_name_prefix = 'model'
@@ -118,6 +119,7 @@ def voc_train_loop(paths: Paths, model: WaveRNN, loss_func, optimizer, train_set
     total_number_of_batches = len(train_set)
 
     writer = SummaryWriter("runs/{0}-{1}".format(model_name_prefix, datetime.now().strftime("%Y%m%d-%H%M%S")))
+    scheduler = StepLR(optimizer, step_size=1, gamma=0.983)
 
     for e in range(EPOCH, epochs + 1):
 
@@ -203,6 +205,7 @@ def voc_train_loop(paths: Paths, model: WaveRNN, loss_func, optimizer, train_set
         save_checkpoint('voc', paths, model, optimizer, name="{0}-epoch-{1}-loss-{2}".format(model_name_prefix, e, avg_loss), is_silent=True)
         model.log(paths.voc_log, msg)
         print(' ')
+        scheduler.step()
 
 
 if __name__ == "__main__":
