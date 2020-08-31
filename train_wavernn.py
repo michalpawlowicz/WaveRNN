@@ -9,7 +9,6 @@ from utils.dataset import get_vocoder_datasets, get_vocoder_test_dataset
 from utils.distribution import discretized_mix_logistic_loss
 from utils import hparams as hp
 from models.fatchord_version import WaveRNN
-from gen_wavernn import gen_testset
 from utils.paths import Paths
 import argparse
 from utils import data_parallel_workaround
