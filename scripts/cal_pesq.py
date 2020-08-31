@@ -44,7 +44,7 @@ if os.path.isdir(args.refpath) and os.path.isdir(args.degpath):
     for idx, (refpath, degpath) in enumerate(zip(refs, degs)):
         wide, narrow = cal_pesq(refpath.path, degpath.path)
         acc[idx,:] = [wide, narrow]
-        print(wide, narrow)
+        print(os.path.basename(refpath), wide, narrow)
         #print("semetrics: ", semetrics.composite(refpath.path, degpath.path))
     print("Wide stats: ", scipy.stats.describe(acc[:,0]))
     print("Narrow stats: ", scipy.stats.describe(acc[:, 1]))
