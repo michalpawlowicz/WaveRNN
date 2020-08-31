@@ -64,7 +64,7 @@ def gen_from_file(model: WaveRNN, load_path: Path, save_path: Path, batched, tar
     mel = torch.tensor(mel).unsqueeze(0)
 
     batch_str = f'gen_batched_target{target}_overlap{overlap}' if batched else 'gen_NOT_BATCHED'
-    save_str = os.path.join(save_path, os.path.splittext(os.path.basename(load_path))[0], "_generated.wav")
+    save_str = os.path.join(save_path, os.path.basename(load_path))
 
     beg = time.time()
     print("Start generating... [{0}]".format(beg))
