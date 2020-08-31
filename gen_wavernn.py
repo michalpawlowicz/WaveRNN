@@ -10,33 +10,6 @@ import time
 import os
 
 
-def gen_testset(model: WaveRNN, test_set, samples, batched, target, overlap, save_path: Path):
-
-    k = model.get_step() // 1000
-
-    for i, (m, x) in enumerate(test_set, 1):
-
-        if i > samples: break
-
-        print('\n| Generating: %i/%i' % (i, samples))
-
-        x = x[0].numpy()
-
-        bits = 16 if hp.voc_mode == 'MOL' else hp.bits
-
-        if hp.mu_law and hp.voc_mode != 'MOL':
-            x = decode_mu_law(x, 2**bits, from_labels=True)
-        else:
-            x = label_2_float(x, bits)
-
-        save_wav(x, save_path/f'{k}k_steps_{i}_target.wav')
-
-        batch_str = f'gen_batched_target{target}_overlap{overlap}' if batched else 'gen_NOT_BATCHED'
-        save_str = str(save_path/f'{k}k_steps_{i}_{batch_str}.wav')
-
-        _ = model.generate(m, save_str, batched, target, overlap, hp.mu_law)
-
-
 def gen_from_file(model: WaveRNN, load_path: Path, save_path: Path, batched, target, overlap):
     suffix = load_path.suffix
     if suffix == ".wav":
@@ -74,10 +47,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Generate WaveRNN Samples')
     parser.add_argument('--batched', '-b', dest='batched', action='store_true', help='Fast Batched Generation')
     parser.add_argument('--unbatched', '-u', dest='batched', action='store_false', help='Slow Unbatched Generation')
-    parser.add_argument('--samples', '-s', type=int, help='[int] number of utterances to generate')
     parser.add_argument('--target', '-t', type=int, help='[int] number of samples in each batch index')
     parser.add_argument('--overlap', '-o', type=int, help='[int] number of crossover samples')
-    parser.add_argument('--file', '-f', type=str, help='[string/path] for testing a wav outside dataset')
+    parser.add_argument('--file', '-f', type=str, required=True, help='[string/path] for testing a wav outside dataset')
     parser.add_argument('--voc_weights', '-w', type=str, help='[string/path] Load in different WaveRNN weights')
     parser.add_argument('--gta', '-g', dest='gta', action='store_true', help='Generate from GTA testset')
     parser.add_argument('--force_cpu', '-c', action='store_true', help='Forces CPU-only training, even when in CUDA capable environment')
@@ -95,11 +67,8 @@ if __name__ == "__main__":
         args.overlap = hp.voc_overlap
     if args.batched is None:
         args.batched = hp.voc_gen_batched
-    if args.samples is None:
-        args.samples = hp.voc_gen_at_checkpoint
 
     batched = args.batched
-    samples = args.samples
     target = args.target
     overlap = args.overlap
     file = args.file
@@ -136,18 +105,14 @@ if __name__ == "__main__":
                   ('Target Samples', target if batched else 'N/A'),
                   ('Overlap Samples', overlap if batched else 'N/A')])
 
-    if file:
-        if os.path.isfile(file):
-            file = Path(file).expanduser()
-            gen_from_file(model, file, paths.voc_output, batched, target, overlap)
-        else:
-            files = [p.path for p in os.scandir(file)]
-            for infile in files:
-                if infile.endswith(".wav"):
-                    infile = Path(infile).expanduser()
-                    gen_from_file(model, infile, paths.voc_output, batched, target, overlap)
+    if os.path.isfile(file):
+        file = Path(file).expanduser()
+        gen_from_file(model, file, paths.voc_output, batched, target, overlap)
     else:
-        _, test_set = get_vocoder_datasets(paths.data, 1, gta)
-        gen_testset(model, test_set, samples, batched, target, overlap, paths.voc_output)
+        files = [p.path for p in os.scandir(file)]
+        for infile in files:
+            if infile.endswith(".wav"):
+                infile = Path(infile).expanduser()
+                gen_from_file(model, infile, paths.voc_output, batched, target, overlap)
 
     print('\n\nExiting...\n')
