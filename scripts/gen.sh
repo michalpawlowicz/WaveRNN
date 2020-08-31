@@ -13,4 +13,4 @@ if [[ ! -f "$MODEL_CHECKPOINT" ]]; then
     exit 1
 fi
 
-find $INPUT_DIR -type f | xargs -I {} python gen_wavernn.py --voc_weights $MODEL_CHECKPOINT --file {} --force_cpu
+python gen_wavernn.py --voc_weights $MODEL_CHECKPOINT --file $INPUT_DIR

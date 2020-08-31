@@ -38,14 +38,9 @@ def gen_testset(model: WaveRNN, test_set, samples, batched, target, overlap, sav
 
 
 def gen_from_file(model: WaveRNN, load_path: Path, save_path: Path, batched, target, overlap):
-
-    k = model.get_step() // 1000
-    file_name = load_path.stem
-
     suffix = load_path.suffix
     if suffix == ".wav":
         wav = load_wav(load_path)
-        #save_wav(wav, save_path/f'__{file_name}__{k}k_steps_target.wav')
         print("Generating from {0}".format(load_path))
         mel = melspectrogram(wav)
         print("Melspectrograms generated!")
@@ -142,8 +137,15 @@ if __name__ == "__main__":
                   ('Overlap Samples', overlap if batched else 'N/A')])
 
     if file:
-        file = Path(file).expanduser()
-        gen_from_file(model, file, paths.voc_output, batched, target, overlap)
+        if os.path.isfile(file):
+            file = Path(file).expanduser()
+            gen_from_file(model, file, paths.voc_output, batched, target, overlap)
+        else:
+            files = [p.path for p in os.scandir(file)]
+            for infile in files:
+                if infile.endswith(".wav"):
+                    infile = Path(infile).expanduser()
+                    gen_from_file(model, infile, paths.voc_output, batched, target, overlap)
     else:
         _, test_set = get_vocoder_datasets(paths.data, 1, gta)
         gen_testset(model, test_set, samples, batched, target, overlap, paths.voc_output)
