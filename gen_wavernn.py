@@ -14,6 +14,7 @@ def gen_from_file(model: WaveRNN, load_path: Path, save_path: Path, batched, tar
     suffix = load_path.suffix
     if suffix == ".wav":
         wav = load_wav(load_path)
+        save_wav(wav, os.path.join(save_path, "target", os.path.basename(load_path)))
         print("Generating from {0}".format(load_path))
         mel = melspectrogram(wav)
         print("Melspectrograms generated!")
