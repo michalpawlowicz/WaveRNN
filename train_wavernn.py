@@ -206,6 +206,7 @@ def voc_train_loop(paths: Paths, model: WaveRNN, loss_func, optimizer, train_set
         model.log(paths.voc_log, msg)
         print(' ')
         scheduler.step()
+        print('Epoch:', e,'LR:', scheduler.get_lr())
 
 
 if __name__ == "__main__":
