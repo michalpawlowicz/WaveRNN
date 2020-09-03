@@ -25,15 +25,36 @@ SIZE=(20, 15)
 plt.figure(figsize=SIZE)
 plt.subplot(3, 1, 1)
 librosa.display.waveplot(y_noisy, sr=sr, max_sr=MAX_SR)
-plt.title("Noisy waveform")
+plt.title("Zaszumiony głos")
 plt.subplot(3, 1, 2)
 librosa.display.waveplot(y_deg, sr=sr, max_sr=MAX_SR)
-plt.title("Enhanced waveform")
+plt.title("Odszumiony głos")
 plt.subplot(3, 1, 3)
 librosa.display.waveplot(y_ref, sr=sr, max_sr=MAX_SR)
-plt.title("Reference waveform")
+plt.title("Czysty głos")
 plt.savefig("{0}_waveform.png".format(args.savepath))
 ##############################
+
+plt.cla()
+
+
+OFFSET=50
+LEN=int(sr/ 20)
+y_noisy_short = y_noisy[OFFSET:OFFSET+LEN]
+y_ref_short = y_ref[OFFSET:OFFSET+LEN]
+y_enh_short = y_deg[OFFSET:OFFSET+LEN]
+plt.figure(figsize=SIZE)
+plt.subplot(2, 1, 1)
+plt.plot(range(0, len(y_ref_short)), y_ref_short, label='Czysty głos')
+plt.plot(range(0, len(y_noisy_short)), y_noisy_short, label='Zaszumiony głos')
+plt.legend(loc="upper right")
+plt.xlabel("Czas")
+plt.subplot(2, 1, 2)
+plt.plot(range(0, len(y_ref_short)), y_ref_short, label='Czysty głos')
+plt.plot(range(0, len(y_enh_short)), y_enh_short, label='Odszumiony głos')
+plt.legend(loc="upper right")
+plt.xlabel("Czas")
+plt.savefig("{0}_waveform2.png".format(args.savepath))
 
 plt.cla()
 
@@ -51,19 +72,19 @@ S = librosa.feature.melspectrogram(y_noisy, sr=sr, n_fft=n_fft, hop_length=hop_l
 S_DB = librosa.power_to_db(S, ref=np.max)
 librosa.display.specshow(S_DB, sr=sr, hop_length=hop_length, x_axis='time', y_axis='mel')
 plt.colorbar(format='%+2.0f dB')
-plt.title("Noisy melspectrogram")
+plt.title("Zaszumiony głos")
 
 plt.subplot(3, 1, 2)
 S = librosa.feature.melspectrogram(y_deg, sr=sr, n_fft=n_fft, hop_length=hop_length, n_mels=n_mels)
 S_DB = librosa.power_to_db(S, ref=np.max)
 librosa.display.specshow(S_DB, sr=sr, hop_length=hop_length, x_axis='time', y_axis='mel')
 plt.colorbar(format='%+2.0f dB')
-plt.title("Enhanced melspectrogram")
+plt.title("Odszumiony głos")
 
 plt.subplot(3, 1, 3)
 S = librosa.feature.melspectrogram(y_ref, sr=sr, n_fft=n_fft, hop_length=hop_length, n_mels=n_mels)
 S_DB = librosa.power_to_db(S, ref=np.max)
 librosa.display.specshow(S_DB, sr=sr, hop_length=hop_length, x_axis='time', y_axis='mel')
 plt.colorbar(format='%+2.0f dB')
-plt.title("Reference melspectrogram")
+plt.title("Czysty głos")
 plt.savefig("{0}_mel.png".format(args.savepath))
