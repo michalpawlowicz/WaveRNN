@@ -47,6 +47,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Generate WaveRNN Samples')
     parser.add_argument('--batched', '-b', dest='batched', action='store_true', help='Fast Batched Generation')
+    parser.add_argument('--output_dir', dest='output_dir', default=None, help='Output')
     parser.add_argument('--unbatched', '-u', dest='batched', action='store_false', help='Slow Unbatched Generation')
     parser.add_argument('--target', '-t', type=int, help='[int] number of samples in each batch index')
     parser.add_argument('--overlap', '-o', type=int, help='[int] number of crossover samples')
@@ -97,6 +98,8 @@ if __name__ == "__main__":
                     mode=hp.voc_mode).to(device)
 
     paths = Paths(hp.data_path, hp.voc_model_id, hp.tts_model_id)
+    if args.output_dir is not None:
+        paths.voc_output = args.output_dir
 
     voc_weights = args.voc_weights if args.voc_weights else paths.voc_latest_weights
 
